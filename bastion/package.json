@@ -1,0 +1,7 @@
+{
+  "name": "terraform-aws-bastion",
+  "private": true,
+  "release": {
+    "branches": ["main"]
+  }
+}
