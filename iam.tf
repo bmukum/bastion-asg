@@ -18,6 +18,13 @@ data "aws_iam_policy_document" "developer_custom_inline_policy" {
       "lambda:Update*",
       "lambda:Publish*",
       "appsync:*",
+      "ecr:InitiateLayerUpload",
+      "ecr:UploadLayerPart",
+      "ecr:CompleteLayerUpload",
+      "ecr:PutImage",
+      "ecr:GetDownloadUrlForLayer",
+      "ecr:BatchGetImage",
+      "ecr:BatchCheckLayerAvailability"
       "ssm:Get*"
     ]
     resources = ["*"]
