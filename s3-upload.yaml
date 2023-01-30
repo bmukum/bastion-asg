@@ -1,0 +1,39 @@
+name: set-prerender-header-cicd
+on:
+  push:
+    branches: [ "master" ]
+
+env:
+  bucket: allconnect-prerender-production-us-east-1
+  key: set-header
+
+jobs:
+  zip_and_deploy:
+    runs-on: ubuntu-latest
+    
+    outputs:
+      VERSION: ${{ steps.zip_and_deploy.outputs.VERSION }}
+    steps:
+    - uses: actions/checkout@v2
+
+    #This runs a shell command to create a release variable and use that variable to name the zip file.
+    - name: Zip the file
+      id: zip_and_deploy
+      run: |
+        export RELEASE_TAG=v$(echo $(date "+%Y-%m-%d")_${{ github.run_number }})
+        zip -r $RELEASE_TAG.zip . -x ".circleci/*" ".github/*"
+        echo "::set-output name=VERSION::$RELEASE_TAG"
+        echo "RELEASE_TAG=$RELEASE_TAG" >> $GITHUB_ENV
+    
+    # This step configure aws credentials using the secrets stored in the github repo, provided by the credential rotator module
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PRODUCTION }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRODUCTION }}
+        aws-region: us-east-1
+    
+    # This step uses the credentials above to authenticate against the aws account and put the zip file in the s3 bucket
+    - name: upload to S3
+      run: |
+        aws s3api put-object --bucket $bucket --key $key/${{ env.RELEASE_TAG }}.zip --body ./${{ env.RELEASE_TAG }}.zip
