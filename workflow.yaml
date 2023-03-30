@@ -1,0 +1,46 @@
+name: build
+on:
+  push:
+    branches:
+    - master
+    - main
+  pull_request
+    branches:
+    - master
+    - main
+
+env:
+  app: august-2022-app
+  tag: v1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Build the app
+      id: compile
+      run: mvn compile
+      
+    - name: Test the app
+      id: test
+      run: mvn package
+      
+    - name: Package the app
+      id: package
+      run: mvn package
+    
+    - name: Build docker image
+      id: docker
+      run: |
+        docker build -t ${{ env.app }}:${{ env.tag }} .
+        
+    - name: Build docker image
+      id: docker
+      if: github.ref == 'refs/heads/master'
+      run: |
+        docker build -t ${{ env.app }}:${{ env.tag }} .
+        docker push $ECR-REGISTRY:${{ env.app}}
+    
